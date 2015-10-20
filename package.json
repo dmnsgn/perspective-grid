@@ -1,0 +1,34 @@
+{
+  "name": "perspective-grid",
+  "version": "1.0.0",
+  "description": "Two point perspective grid on canvas",
+  "main": "index.js",
+  "license": "MIT",
+  "author": {
+    "name": "Damien Seguin",
+    "url": "https://github.com/dmnsgn"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "babelify": "^6.3.0",
+    "budo": "^5.1.4",
+    "jscs-jsdoc": "^1.2.0"
+  },
+  "scripts": {
+    "test": "budo test.js --live --open -- -t [ babelify --extensions .js ] | garnish",
+    "build": "browserify -s PerspectiveGrid -t babelify index.js -o build/build.js && browserify -s PerspectiveGrid -t babelify index.js | uglifyjs --output build/build.min.js"
+  },
+  "keywords": [
+    "canvas",
+    "grid",
+    "perspective"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/dmnsgn/perspective-grid.git"
+  },
+  "homepage": "https://github.com/dmnsgn/perspective-grid",
+  "bugs": {
+    "url": "https://github.com/dmnsgn/perspective-grid/issues"
+  }
+}
