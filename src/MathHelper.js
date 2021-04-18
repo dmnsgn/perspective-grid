@@ -1,11 +1,8 @@
 /**
- * @file Math utils file
- * @author Damien Seguin
+ * @module MathHelper
  */
 
-'use strict';
-
-import Point from './Point';
+import Point from "./Point.js";
 
 /** @constant {number} */
 export const EPSILON = 0.0001;
@@ -24,7 +21,7 @@ export const TWO_PI = PI * 2;
  */
 export function getDistance(point1, point2) {
   return Math.sqrt(
-    Math.pow((point1.x - point2.x), 2) + Math.pow((point1.y - point2.y), 2)
+    Math.pow(point1.x - point2.x, 2) + Math.pow(point1.y - point2.y, 2)
   );
 }
 
@@ -37,7 +34,6 @@ export function getDistance(point1, point2) {
  * @return {Point}
  */
 export function getConvergencePoint(m1, c1, m2, c2) {
-
   if (Math.abs(m1 - m2) < EPSILON) {
     return null;
   }
@@ -69,7 +65,6 @@ export function getVerticalConvergence(x, m, c) {
  * @return {{m:number, c: number}}
  */
 export function getLineParams(x1, y1, x2, y2) {
-
   const dx = x1 - x2;
 
   if (Math.abs(dx) < EPSILON) {
@@ -81,7 +76,7 @@ export function getLineParams(x1, y1, x2, y2) {
 
   return {
     m: m,
-    c: c
+    c: c,
   };
 }
 
@@ -92,12 +87,11 @@ export function getLineParams(x1, y1, x2, y2) {
  * @return {{m:number, c: number}}
  */
 export function getParallelLine(line, point) {
-
   const c = point.y - line.m * point.x;
 
   return {
     m: line.m,
-    c: c
+    c: c,
   };
 }
 
@@ -118,7 +112,6 @@ export function getDistanceToLine(line, point) {
  * @return {Point}
  */
 export function getProjectedPoint(line, point) {
-
   const perpendicularm = -1 / line.m;
   const perpendicularc = point.y - perpendicularm * point.x;
   const x = (line.c - perpendicularc) / (perpendicularm - line.m);

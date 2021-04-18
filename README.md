@@ -1,61 +1,72 @@
 # perspective-grid
 
-[![experimental](http://badges.github.io/stability-badges/dist/experimental.svg)](http://github.com/badges/stability-badges)
+[![npm version](https://img.shields.io/npm/v/perspective-grid)](https://www.npmjs.com/package/perspective-grid)
+[![stability-stable](https://img.shields.io/badge/stability-stable-green.svg)](https://www.npmjs.com/package/perspective-grid)
+[![npm minzipped size](https://img.shields.io/bundlephobia/minzip/perspective-grid)](https://www.npmjs.com/package/perspective-grid)
+[![dependencies](https://img.shields.io/david/dmnsgn/perspective-grid)](https://github.com/dmnsgn/perspective-grid/blob/main/package.json)
+[![types](https://img.shields.io/npm/types/perspective-grid)](https://github.com/microsoft/TypeScript)
+[![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-fa6673.svg)](https://conventionalcommits.org)
+[![styled with prettier](https://img.shields.io/badge/styled_with-Prettier-f8bc45.svg?logo=prettier)](https://github.com/prettier/prettier)
+[![linted with eslint](https://img.shields.io/badge/linted_with-ES_Lint-4B32C3.svg?logo=eslint)](https://github.com/eslint/eslint)
+[![license](https://img.shields.io/github/license/dmnsgn/perspective-grid)](https://github.com/dmnsgn/perspective-grid/blob/main/LICENSE.md)
 
-Two point perspective grid on canvas
+Two point perspective grid on canvas.
 
-![Perspective grid example](screenshot.png)
+[![paypal](https://img.shields.io/badge/donate-paypal-informational?logo=paypal)](https://paypal.me/dmnsgn)
+[![coinbase](https://img.shields.io/badge/donate-coinbase-informational?logo=coinbase)](https://commerce.coinbase.com/checkout/56cbdf28-e323-48d8-9c98-7019e72c97f3)
+[![twitter](https://img.shields.io/twitter/follow/dmnsgn?style=social)](https://twitter.com/dmnsgn)
+
+![](https://raw.githubusercontent.com/dmnsgn/perspective-grid/main/screenshot.gif)
+
+## Installation
+
+```bash
+npm install perspective-grid
+```
 
 ## Usage
 
-[![NPM](https://nodei.co/npm/perspective-grid.png)](https://www.npmjs.com/package/perspective-grid)
+```js
+import PerspectiveGrid from "perspective-grid";
+import canvasContext from "canvas-context";
 
-```javascript
-let ctx = canvas.getContext('2d');
+const { context, canvas } = canvasContext("2d", {
+  width: window.innerWidth,
+  height: window.innerHeight,
+});
 
-let grid = new PerspectiveGrid(ctx, 10, squares);
+const grid = new PerspectiveGrid(context, 10);
 grid.init(
-  new Point(140, 170),
-  new Point(canvas.width - 140, 140),
+  new Point(300, 380),
+  new Point(canvas.width - 300, 300),
   new Point(canvas.width, canvas.height),
   new Point(0, canvas.height)
 );
 grid.update();
-// grid.debug = true;
-```
 
-```javascript
-// Draw
-ctx.save();
 // Operations on lines...
-// ctx.lineWidth = 1;
+context.save();
 grid.drawLines();
-ctx.restore();
+context.restore();
 
-ctx.save();
+context.save();
 grid.drawSquares();
-ctx.restore();
-```
+context.restore();
 
-or
-
-```javascript
-// Draw
-ctx.save();
+// ...or simply draw
+context.save();
 grid.draw();
-ctx.restore();
+context.restore();
 ```
 
-## Test
+## API
 
-```bash
-npm test
-```
+<!-- api-start -->
 
-## Caveat
+Auto-generated API content.
 
-Does not work correctly when there is only one vanishing point
+<!-- api-end -->
 
 ## License
 
-MIT, see [LICENSE.md](http://github.com/dmnsgn/perspective-grid/blob/master/LICENSE.md) for details.
+MIT. See [license file](https://github.com/dmnsgn/perspective-grid/blob/main/LICENSE.md).

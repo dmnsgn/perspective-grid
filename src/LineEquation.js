@@ -1,23 +1,20 @@
 /**
- * @file Defines a line by its affine function
- * @author Damien Seguin
+ * @module LineEquation
  */
 
-'use strict';
-
-import Point from './Point';
-import { getConvergencePoint, getVerticalConvergence } from './MathHelper';
+import Point from "./Point.js";
+import { getConvergencePoint, getVerticalConvergence } from "./MathHelper.js";
 
 /**
  * LineEquation defines a line equation or vertical
+ *
+ * @alias module:LineEquation
  * @param {LineParams} lineParams Line parameters
- * @param {number}     x          X position
- * @constructor
+ * @param {number} x X position
  */
-export default class LineEquation {
-
+class LineEquation {
   constructor(lineParams, x) {
-    this.vertical = (lineParams === null);
+    this.vertical = lineParams === null;
     if (this.vertical) {
       this.x = x;
     } else {
@@ -32,7 +29,6 @@ export default class LineEquation {
    * @return {Point}
    */
   intersect(equation) {
-
     if (this.vertical && equation.vertical) {
       return null;
     }
@@ -53,5 +49,6 @@ export default class LineEquation {
 
     return getConvergencePoint(this.m, this.c, equation.m, equation.c);
   }
-
 }
+
+export default LineEquation;

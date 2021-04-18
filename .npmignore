@@ -1,7 +1,10 @@
-bower_components
-node_modules
-*.log
-.DS_Store
-test.js
-.npmignore
-LICENSE.md
+web_modules
+examples
+docs
+coverage
+test
+.github
+screenshot.*
+index.html
+tsconfig.json
+.editorconfig

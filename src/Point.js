@@ -1,17 +1,15 @@
 /**
- * @file Defines a point
- * @author Damien Seguin
+ * @module Point
  */
-
-'use strict';
 
 /**
  * An object that defines a Point
+ *
+ * @alias module:Point
  * @param {number} x x coordinate
  * @param {number} y y coordinate
- * @constructor
  */
-export default class Point {
+class Point {
   constructor(x, y) {
     this.x = x;
     this.y = y;
@@ -23,7 +21,7 @@ export default class Point {
    * @return {Boolean}
    */
   isInList(list) {
-    for (var i = 0, len = list.length; i < len; i ++) {
+    for (var i = 0, len = list.length; i < len; i++) {
       if (this.x === list[i].x && this.y === list[i].y) {
         return true;
       }
@@ -31,3 +29,5 @@ export default class Point {
     return false;
   }
 }
+
+export default Point;

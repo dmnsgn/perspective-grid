@@ -1,20 +1,18 @@
 /**
- * @file Defines a segment between two points
- * @author Damien Seguin
+ * @module Segment
  */
 
-'use strict';
-
-import LineEquation from './LineEquation';
-import { getLineParams } from './MathHelper';
+import LineEquation from "./LineEquation.js";
+import { getLineParams } from "./MathHelper.js";
 
 /**
  * An object with two points that defines a segment
+ *
+ * @alias module:Segment
  * @param {Point} p1 First point
  * @param {Point} p1 Second point
- * @constructor
  */
-export default class Segment {
+class Segment {
   constructor(p1, p2) {
     this.p1 = p1;
     this.p2 = p2;
@@ -36,5 +34,7 @@ export default class Segment {
     );
 
     return line1.intersect(line2);
-  };
+  }
 }
+
+export default Segment;
