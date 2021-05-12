@@ -35,11 +35,8 @@ const { context, canvas } = canvasContext("2d", {
   height: window.innerHeight,
 });
 
+// Alternatively pass [rows, columns] for a grid with different rows and column units
 const grid = new PerspectiveGrid(context, 10);
-
-// Alternatively, you can define the number of rows and columns. In this example,
-// we would create a grid with 5 rows and 8 columns:
-// const grid = new PerspectiveGrid(context, [5, 8]);
 
 grid.init(
   new Point(300, 380),

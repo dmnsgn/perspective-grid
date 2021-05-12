@@ -19,15 +19,12 @@ class PerspectiveGrid {
   /**
    * Creates an instance of PerspectiveGrid.
    * @param {CanvasRenderingContext2D} context The context to draw the grid in
-   * @param {number|array} units
-   * If numeric, number of rows and columns. If array, follow the following
-   * format: [rows, columns].
-   *
+   * @param {number|Array<number>} units Number of rows and columns (unit or [rows, columns]).
    * @param {Array<Point>} [squares] Highlighted squares in the grid
    */
   constructor(context, units, squares) {
     this.context = context;
-    this._assignRowsAndColumns(units);
+    [this.rows, this.columns] = Array.isArray(units) ? units : [units, units];
     this.squares = squares || [];
   }
 
@@ -274,43 +271,6 @@ class PerspectiveGrid {
   }
 
   /**
-   * Assign the rows and columns based on the passed units.
-   *
-   * @param {number|array} units
-   *   Must either be a number or an array consisting of number of rows and
-   *   columns like so: [rows, columns].
-   *
-   * @private
-   */
-  _assignRowsAndColumns(units) {
-    const errorMsg = 'Passed units must be either a number or an array consisting of rows and columns';
-    let rows, columns;
-
-    if (typeof(units) === 'number') {
-      rows = parseInt(units, 10);
-      columns = parseInt(units, 10);
-    } else if (Array.isArray(units)) {
-      if (units.length !== 2) {
-        throw new TypeError(errorMsg);
-      }
-
-      units.filter(function(unit) {
-        if (isNaN(unit)) {
-          throw new TypeError(errorMsg);
-        }
-      });
-
-      rows = parseInt(units[0], 10);
-      columns = parseInt(units[1], 10);
-    } else {
-      throw new TypeError(errorMsg);
-    }
-
-    this.rows = rows;
-    this.columns = columns;
-  }
-
-  /**
    * Update lines (vertical and horizontal) equations
    * @private
    * @param {LineEquation} side
@@ -374,17 +334,16 @@ class PerspectiveGrid {
    * Get line equations for equidistant lines
    * @private
    */
-  _getEquidistantLines(lineType, sideStart, sideEnd, matchingStart, matchingEnd) {
+  _getEquidistantLines(
+    lineType,
+    sideStart,
+    sideEnd,
+    matchingStart,
+    matchingEnd
+  ) {
     let lines = [];
 
-    let units;
-    if (lineType === LineType.HORIZONTAL) {
-      units = this.rows;
-    } else if (lineType === LineType.VERTICAL) {
-      units = this.columns;
-    } else {
-      throw new TypeError('Must define a valid line type when getting lines');
-    }
+    const units = lineType === LineType.HORIZONTAL ? this.rows : this.columns;
 
     const delta = new Point(
       (sideEnd.x - sideStart.x) / units,
@@ -419,11 +378,11 @@ class PerspectiveGrid {
   /**
    * Draw line from horizon to vanishing point
    * @private
-   * @param  {number} lineType   An enum value from LineType.
+   * @param  {LineType} lineType
    * @param  {LineEquation} side
    * @param  {LineEquation} oppositeSide
    * @param  {LineEquation} horizon
-   * @param  {Point}        vanishingPoint
+   * @param  {Point} vanishingPoint
    * @return {Array<LineEquation>}
    */
   _getLines(lineType, side, oppositeSide, horizon, vanishingPoint) {
@@ -440,14 +399,7 @@ class PerspectiveGrid {
       projectedOppositeSide.y - projectedSide.y
     );
 
-    let units;
-    if (lineType === LineType.HORIZONTAL) {
-      units = this.rows;
-    } else if (lineType === LineType.VERTICAL) {
-      units = this.columns;
-    } else {
-      throw new TypeError('Must define a valid line type when getting lines');
-    }
+    const units = lineType === LineType.HORIZONTAL ? this.rows : this.columns;
 
     const dx = distance.x / units;
     const dy = distance.y / units;
