@@ -5,6 +5,7 @@
 import Point from "./Point.js";
 import Segment from "./Segment.js";
 import LineEquation from "./LineEquation.js";
+import LineType from "./LineType.js";
 import * as MathHelper from "./MathHelper.js";
 
 /**
@@ -18,14 +19,12 @@ class PerspectiveGrid {
   /**
    * Creates an instance of PerspectiveGrid.
    * @param {CanvasRenderingContext2D} context The context to draw the grid in
-   * @param {number} units Number of rows and columns
+   * @param {number|Array<number>} units Number of rows and columns (unit or [rows, columns]).
    * @param {Array<Point>} [squares] Highlighted squares in the grid
    */
   constructor(context, units, squares) {
-    this._lineCount = units + 1;
-    this.gridUnitCount = units;
     this.context = context;
-
+    [this.rows, this.columns] = Array.isArray(units) ? units : [units, units];
     this.squares = squares || [];
   }
 
@@ -45,8 +44,8 @@ class PerspectiveGrid {
     this.horizontal = [];
     this.vertical = [];
 
-    const dy = (this._bl.y - this._tl.y) / this.gridUnitCount;
-    const dx = (this._tr.x - this._tl.x) / this.gridUnitCount;
+    const dy = (this._bl.y - this._tl.y) / this.rows;
+    const dx = (this._tr.x - this._tl.x) / this.columns;
 
     for (let y = this._tl.y; y <= this._bl.y + MathHelper.EPSILON; y += dy) {
       this.horizontal[this.horizontal.length] = new Segment(
@@ -130,20 +129,34 @@ class PerspectiveGrid {
     // Compute segment positions
     if (horizon === null) {
       horizontal = this._getEquidistantLines(
+        LineType.HORIZONTAL,
         this._tl,
         this._bl,
         this._tr,
         this._br
       );
       vertical = this._getEquidistantLines(
+        LineType.VERTICAL,
         this._tl,
         this._tr,
         this._bl,
         this._br
       );
     } else {
-      horizontal = this._getLines(topLine, bottomLine, horizon, hVanishing);
-      vertical = this._getLines(leftLine, rightLine, horizon, vVanishing);
+      horizontal = this._getLines(
+        LineType.HORIZONTAL,
+        topLine,
+        bottomLine,
+        horizon,
+        hVanishing
+      );
+      vertical = this._getLines(
+        LineType.VERTICAL,
+        leftLine,
+        rightLine,
+        horizon,
+        vVanishing
+      );
     }
 
     this._updateLines(topLine, bottomLine, vertical, this.vertical);
@@ -215,7 +228,7 @@ class PerspectiveGrid {
     for (let i = 0; i < points.length; i++) {
       const point = points[i];
 
-      if (point.x > this.gridUnitCount || point.y > this.gridUnitCount) {
+      if (point.x > this.columns || point.y > this.rows) {
         throw new Error(`Point ${point.x}, ${point.x} is not in the grid.`);
       }
 
@@ -321,18 +334,27 @@ class PerspectiveGrid {
    * Get line equations for equidistant lines
    * @private
    */
-  _getEquidistantLines(sideStart, sideEnd, matchingStart, matchingEnd) {
+  _getEquidistantLines(
+    lineType,
+    sideStart,
+    sideEnd,
+    matchingStart,
+    matchingEnd
+  ) {
     let lines = [];
+
+    const units = lineType === LineType.HORIZONTAL ? this.rows : this.columns;
+
     const delta = new Point(
-      (sideEnd.x - sideStart.x) / this.gridUnitCount,
-      (sideEnd.y - sideStart.y) / this.gridUnitCount
+      (sideEnd.x - sideStart.x) / units,
+      (sideEnd.y - sideStart.y) / units
     );
     const matchingDelta = new Point(
-      (matchingEnd.x - matchingStart.x) / this.gridUnitCount,
-      (matchingEnd.y - matchingStart.y) / this.gridUnitCount
+      (matchingEnd.x - matchingStart.x) / units,
+      (matchingEnd.y - matchingStart.y) / units
     );
 
-    for (let i = 0; i < this._lineCount; i++) {
+    for (let i = 0; i <= units; i++) {
       const begin = new Point(
         sideStart.x + i * delta.x,
         sideStart.y + i * delta.y
@@ -356,13 +378,14 @@ class PerspectiveGrid {
   /**
    * Draw line from horizon to vanishing point
    * @private
+   * @param  {LineType} lineType
    * @param  {LineEquation} side
    * @param  {LineEquation} oppositeSide
    * @param  {LineEquation} horizon
-   * @param  {Point}        vanishingPoint
+   * @param  {Point} vanishingPoint
    * @return {Array<LineEquation>}
    */
-  _getLines(side, oppositeSide, horizon, vanishingPoint) {
+  _getLines(lineType, side, oppositeSide, horizon, vanishingPoint) {
     // Project sides onto the horizon
     const projectedSide = side.intersect(horizon);
     const projectedOppositeSide = oppositeSide.intersect(horizon);
@@ -375,12 +398,15 @@ class PerspectiveGrid {
       projectedOppositeSide.x - projectedSide.x,
       projectedOppositeSide.y - projectedSide.y
     );
-    const dx = distance.x / this.gridUnitCount;
-    const dy = distance.y / this.gridUnitCount;
+
+    const units = lineType === LineType.HORIZONTAL ? this.rows : this.columns;
+
+    const dx = distance.x / units;
+    const dy = distance.y / units;
 
     let results = [];
 
-    for (let i = 0; i < this._lineCount; i++) {
+    for (let i = 0; i <= units; i++) {
       const startPoint = new Point(
         projectedSide.x + i * dx,
         projectedSide.y + i * dy

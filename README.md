@@ -35,7 +35,9 @@ const { context, canvas } = canvasContext("2d", {
   height: window.innerHeight,
 });
 
+// Alternatively pass [rows, columns] for a grid with different rows and column units
 const grid = new PerspectiveGrid(context, 10);
+
 grid.init(
   new Point(300, 380),
   new Point(canvas.width - 300, 300),
@@ -93,7 +95,7 @@ context.restore();
 
 LineEquation defines a line equation or vertical
 
-**Kind**: Exported class  
+**Kind**: Exported class
 <a name="new_module_LineEquation--LineEquation_new"></a>
 
 #### new LineEquation(lineParams, x)
@@ -136,24 +138,24 @@ Get intersection of two line equation
 
 ### MathHelper.EPSILON : <code>number</code>
 
-**Kind**: static constant of [<code>MathHelper</code>](#module_MathHelper)  
+**Kind**: static constant of [<code>MathHelper</code>](#module_MathHelper)
 <a name="module_MathHelper.PI"></a>
 
 ### MathHelper.PI : <code>number</code>
 
-**Kind**: static constant of [<code>MathHelper</code>](#module_MathHelper)  
+**Kind**: static constant of [<code>MathHelper</code>](#module_MathHelper)
 <a name="module_MathHelper.TWO_PI"></a>
 
 ### MathHelper.TWO_PI : <code>number</code>
 
-**Kind**: static constant of [<code>MathHelper</code>](#module_MathHelper)  
+**Kind**: static constant of [<code>MathHelper</code>](#module_MathHelper)
 <a name="module_MathHelper.getDistance"></a>
 
 ### MathHelper.getDistance(point1, point2) ⇒ <code>number</code>
 
 Get the distance between two points
 
-**Kind**: static method of [<code>MathHelper</code>](#module_MathHelper)  
+**Kind**: static method of [<code>MathHelper</code>](#module_MathHelper)
 **Returns**: <code>number</code> - Distance between point1 and point2
 
 | Param  | Type                | Description  |
@@ -284,7 +286,7 @@ Two point perspective grid on canvas.
 
 Note: Does not work correctly when there is only one vanishing point.
 
-**Kind**: Exported class  
+**Kind**: Exported class
 <a name="new_module_PerspectiveGrid--PerspectiveGrid_new"></a>
 
 #### new PerspectiveGrid(context, units, [squares])
@@ -318,14 +320,14 @@ Reset the corners (clockwise starting from top left)
 
 Draw the grid in the instance context
 
-**Kind**: instance method of [<code>PerspectiveGrid</code>](#exp_module_PerspectiveGrid--PerspectiveGrid)  
+**Kind**: instance method of [<code>PerspectiveGrid</code>](#exp_module_PerspectiveGrid--PerspectiveGrid)
 <a name="module_PerspectiveGrid--PerspectiveGrid+update"></a>
 
 #### perspectiveGrid.update()
 
 Update grid segments
 
-**Kind**: instance method of [<code>PerspectiveGrid</code>](#exp_module_PerspectiveGrid--PerspectiveGrid)  
+**Kind**: instance method of [<code>PerspectiveGrid</code>](#exp_module_PerspectiveGrid--PerspectiveGrid)
 <a name="module_PerspectiveGrid--PerspectiveGrid+getQuadAt"></a>
 
 #### perspectiveGrid.getQuadAt(column, row) ⇒ <code>Array.&lt;Point&gt;</code>
@@ -358,14 +360,14 @@ Get the center point from grid unit to pixel eg. (1, 1) is the first top left po
 
 Actually draw the lines (vertical and horizontal) in the context
 
-**Kind**: instance method of [<code>PerspectiveGrid</code>](#exp_module_PerspectiveGrid--PerspectiveGrid)  
+**Kind**: instance method of [<code>PerspectiveGrid</code>](#exp_module_PerspectiveGrid--PerspectiveGrid)
 <a name="module_PerspectiveGrid--PerspectiveGrid+drawSquares"></a>
 
 #### perspectiveGrid.drawSquares()
 
 Draw highlighted squares in the grid
 
-**Kind**: instance method of [<code>PerspectiveGrid</code>](#exp_module_PerspectiveGrid--PerspectiveGrid)  
+**Kind**: instance method of [<code>PerspectiveGrid</code>](#exp_module_PerspectiveGrid--PerspectiveGrid)
 <a name="module_PerspectiveGrid--PerspectiveGrid+drawPoint"></a>
 
 #### perspectiveGrid.drawPoint(point, radius, color)
@@ -408,7 +410,7 @@ Get a line parallel to the horizon
 
 An object that defines a Point
 
-**Kind**: Exported class  
+**Kind**: Exported class
 <a name="new_module_Point--Point_new"></a>
 
 #### new Point(x, y)
@@ -445,7 +447,7 @@ Check if a point is in a list of points
 
 An object with two points that defines a segment
 
-**Kind**: Exported class  
+**Kind**: Exported class
 <a name="new_module_Segment--Segment_new"></a>
 
 #### new Segment(p1, p1)
