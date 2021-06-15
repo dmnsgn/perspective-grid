@@ -43,7 +43,7 @@
       import PerspectiveGrid, { Point } from "./index.js";
 
       import canvasContext from "canvas-context";
-      import * as dat from "dat.gui";
+      import { Pane } from "tweakpane";
 
       const CONFIG = {
         direction: "top",
@@ -137,10 +137,15 @@
         context.restore();
       };
 
-      const gui = new dat.GUI();
-      gui
-        .add(CONFIG, "direction", Object.keys(grids))
-        .onFinishChange(() => draw());
+      const pane = new Pane();
+      pane
+        .addInput(CONFIG, "direction", {
+          options: Object.keys(grids).map((value) => ({
+            text: value.toUpperCase(),
+            value,
+          })),
+        })
+        .on("change", () => draw());
 
       draw();
     </script>

@@ -1,5 +1,9 @@
 var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
+function getDefaultExportFromCjs (x) {
+	return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
+}
+
 function createCommonjsModule(fn, basedir, module) {
 	return module = {
 		path: basedir,
@@ -119,10 +123,16 @@ var toPrimitive = function (input, PREFERRED_STRING) {
   throw TypeError("Can't convert object to primitive value");
 };
 
+// `ToObject` abstract operation
+// https://tc39.es/ecma262/#sec-toobject
+var toObject = function (argument) {
+  return Object(requireObjectCoercible(argument));
+};
+
 var hasOwnProperty = {}.hasOwnProperty;
 
-var has = function (it, key) {
-  return hasOwnProperty.call(it, key);
+var has = Object.hasOwn || function hasOwn(it, key) {
+  return hasOwnProperty.call(toObject(it), key);
 };
 
 var document = global_1.document;
@@ -208,7 +218,7 @@ var sharedStore = store;
 
 var functionToString = Function.toString;
 
-// this helper broken in `3.4.1-3.4.4`, so we can't use `shared` helper
+// this helper broken in `core-js@3.4.1-3.4.4`, so we can't use `shared` helper
 if (typeof sharedStore.inspectSource != 'function') {
   sharedStore.inspectSource = function (it) {
     return functionToString.call(it);
@@ -221,11 +231,13 @@ var WeakMap = global_1.WeakMap;
 
 var nativeWeakMap = typeof WeakMap === 'function' && /native code/.test(inspectSource(WeakMap));
 
+var isPure = false;
+
 var shared = createCommonjsModule(function (module) {
 (module.exports = function (key, value) {
   return sharedStore[key] || (sharedStore[key] = value !== undefined ? value : {});
 })('versions', []).push({
-  version: '3.10.1',
+  version: '3.14.0',
   mode:  'global',
   copyright: '© 2021 Denis Pushkarev (zloirock.ru)'
 });
@@ -246,6 +258,7 @@ var sharedKey = function (key) {
 
 var hiddenKeys = {};
 
+var OBJECT_ALREADY_INITIALIZED = 'Object already initialized';
 var WeakMap$1 = global_1.WeakMap;
 var set, get, has$1;
 
@@ -262,12 +275,13 @@ var getterFor = function (TYPE) {
   };
 };
 
-if (nativeWeakMap) {
+if (nativeWeakMap || sharedStore.state) {
   var store$1 = sharedStore.state || (sharedStore.state = new WeakMap$1());
   var wmget = store$1.get;
   var wmhas = store$1.has;
   var wmset = store$1.set;
   set = function (it, metadata) {
+    if (wmhas.call(store$1, it)) throw new TypeError(OBJECT_ALREADY_INITIALIZED);
     metadata.facade = it;
     wmset.call(store$1, it, metadata);
     return metadata;
@@ -282,6 +296,7 @@ if (nativeWeakMap) {
   var STATE = sharedKey('state');
   hiddenKeys[STATE] = true;
   set = function (it, metadata) {
+    if (has(it, STATE)) throw new TypeError(OBJECT_ALREADY_INITIALIZED);
     metadata.facade = it;
     createNonEnumerableProperty(it, STATE, metadata);
     return metadata;
@@ -544,8 +559,6 @@ var _export = function (options, source) {
   }
 };
 
-var engineIsNode = classofRaw(global_1.process) == 'process';
-
 var engineUserAgent = getBuiltIn('navigator', 'userAgent') || '';
 
 var process = global_1.process;
@@ -555,7 +568,7 @@ var match, version;
 
 if (v8) {
   match = v8.split('.');
-  version = match[0] + match[1];
+  version = match[0] < 4 ? 1 : match[0] + match[1];
 } else if (engineUserAgent) {
   match = engineUserAgent.match(/Edge\/(\d+)/);
   if (!match || match[1] >= 74) {
@@ -566,13 +579,18 @@ if (v8) {
 
 var engineV8Version = version && +version;
 
+/* eslint-disable es/no-symbol -- required for testing */
+
+
+
 // eslint-disable-next-line es/no-object-getownpropertysymbols -- required for testing
 var nativeSymbol = !!Object.getOwnPropertySymbols && !fails(function () {
-  // eslint-disable-next-line es/no-symbol -- required for testing
-  return !Symbol.sham &&
-    // Chrome 38 Symbol has incorrect toString conversion
+  var symbol = Symbol();
+  // Chrome 38 Symbol has incorrect toString conversion
+  // `get-own-property-symbols` polyfill symbols converted to object are not Symbol instances
+  return !String(symbol) || !(Object(symbol) instanceof Symbol) ||
     // Chrome 38-40 symbols are not inherited from DOM collections prototypes to instances
-    (engineIsNode ? engineV8Version === 38 : engineV8Version > 37 && engineV8Version < 41);
+    !Symbol.sham && engineV8Version && engineV8Version < 41;
 });
 
 /* eslint-disable es/no-symbol -- required for testing */
@@ -581,12 +599,6 @@ var nativeSymbol = !!Object.getOwnPropertySymbols && !fails(function () {
 var useSymbolAsUid = nativeSymbol
   && !Symbol.sham
   && typeof Symbol.iterator == 'symbol';
-
-// `ToObject` abstract operation
-// https://tc39.es/ecma262/#sec-toobject
-var toObject = function (argument) {
-  return Object(requireObjectCoercible(argument));
-};
 
 var WellKnownSymbolsStore = shared('wks');
 var Symbol$1 = global_1.Symbol;
@@ -600,6 +612,216 @@ var wellKnownSymbol = function (name) {
       WellKnownSymbolsStore[name] = createWellKnownSymbol('Symbol.' + name);
     }
   } return WellKnownSymbolsStore[name];
+};
+
+var aFunction$1 = function (it) {
+  if (typeof it != 'function') {
+    throw TypeError(String(it) + ' is not a function');
+  } return it;
+};
+
+// optional / simple context binding
+var functionBindContext = function (fn, that, length) {
+  aFunction$1(fn);
+  if (that === undefined) return fn;
+  switch (length) {
+    case 0: return function () {
+      return fn.call(that);
+    };
+    case 1: return function (a) {
+      return fn.call(that, a);
+    };
+    case 2: return function (a, b) {
+      return fn.call(that, a, b);
+    };
+    case 3: return function (a, b, c) {
+      return fn.call(that, a, b, c);
+    };
+  }
+  return function (/* ...args */) {
+    return fn.apply(that, arguments);
+  };
+};
+
+var iterators = {};
+
+var ITERATOR = wellKnownSymbol('iterator');
+var ArrayPrototype = Array.prototype;
+
+// check on default Array iterator
+var isArrayIteratorMethod = function (it) {
+  return it !== undefined && (iterators.Array === it || ArrayPrototype[ITERATOR] === it);
+};
+
+var TO_STRING_TAG = wellKnownSymbol('toStringTag');
+var test = {};
+
+test[TO_STRING_TAG] = 'z';
+
+var toStringTagSupport = String(test) === '[object z]';
+
+var TO_STRING_TAG$1 = wellKnownSymbol('toStringTag');
+// ES3 wrong here
+var CORRECT_ARGUMENTS = classofRaw(function () { return arguments; }()) == 'Arguments';
+
+// fallback for IE11 Script Access Denied error
+var tryGet = function (it, key) {
+  try {
+    return it[key];
+  } catch (error) { /* empty */ }
+};
+
+// getting tag from ES6+ `Object.prototype.toString`
+var classof = toStringTagSupport ? classofRaw : function (it) {
+  var O, tag, result;
+  return it === undefined ? 'Undefined' : it === null ? 'Null'
+    // @@toStringTag case
+    : typeof (tag = tryGet(O = Object(it), TO_STRING_TAG$1)) == 'string' ? tag
+    // builtinTag case
+    : CORRECT_ARGUMENTS ? classofRaw(O)
+    // ES3 arguments fallback
+    : (result = classofRaw(O)) == 'Object' && typeof O.callee == 'function' ? 'Arguments' : result;
+};
+
+var ITERATOR$1 = wellKnownSymbol('iterator');
+
+var getIteratorMethod = function (it) {
+  if (it != undefined) return it[ITERATOR$1]
+    || it['@@iterator']
+    || iterators[classof(it)];
+};
+
+var iteratorClose = function (iterator) {
+  var returnMethod = iterator['return'];
+  if (returnMethod !== undefined) {
+    return anObject(returnMethod.call(iterator)).value;
+  }
+};
+
+var Result = function (stopped, result) {
+  this.stopped = stopped;
+  this.result = result;
+};
+
+var iterate = function (iterable, unboundFunction, options) {
+  var that = options && options.that;
+  var AS_ENTRIES = !!(options && options.AS_ENTRIES);
+  var IS_ITERATOR = !!(options && options.IS_ITERATOR);
+  var INTERRUPTED = !!(options && options.INTERRUPTED);
+  var fn = functionBindContext(unboundFunction, that, 1 + AS_ENTRIES + INTERRUPTED);
+  var iterator, iterFn, index, length, result, next, step;
+
+  var stop = function (condition) {
+    if (iterator) iteratorClose(iterator);
+    return new Result(true, condition);
+  };
+
+  var callFn = function (value) {
+    if (AS_ENTRIES) {
+      anObject(value);
+      return INTERRUPTED ? fn(value[0], value[1], stop) : fn(value[0], value[1]);
+    } return INTERRUPTED ? fn(value, stop) : fn(value);
+  };
+
+  if (IS_ITERATOR) {
+    iterator = iterable;
+  } else {
+    iterFn = getIteratorMethod(iterable);
+    if (typeof iterFn != 'function') throw TypeError('Target is not iterable');
+    // optimisation for array iterators
+    if (isArrayIteratorMethod(iterFn)) {
+      for (index = 0, length = toLength(iterable.length); length > index; index++) {
+        result = callFn(iterable[index]);
+        if (result && result instanceof Result) return result;
+      } return new Result(false);
+    }
+    iterator = iterFn.call(iterable);
+  }
+
+  next = iterator.next;
+  while (!(step = next.call(iterator)).done) {
+    try {
+      result = callFn(step.value);
+    } catch (error) {
+      iteratorClose(iterator);
+      throw error;
+    }
+    if (typeof result == 'object' && result && result instanceof Result) return result;
+  } return new Result(false);
+};
+
+var arrayMethodIsStrict = function (METHOD_NAME, argument) {
+  var method = [][METHOD_NAME];
+  return !!method && fails(function () {
+    // eslint-disable-next-line no-useless-call,no-throw-literal -- required for testing
+    method.call(null, argument || function () { throw 1; }, 1);
+  });
+};
+
+// `Array.prototype.{ reduce, reduceRight }` methods implementation
+var createMethod$1 = function (IS_RIGHT) {
+  return function (that, callbackfn, argumentsLength, memo) {
+    aFunction$1(callbackfn);
+    var O = toObject(that);
+    var self = indexedObject(O);
+    var length = toLength(O.length);
+    var index = IS_RIGHT ? length - 1 : 0;
+    var i = IS_RIGHT ? -1 : 1;
+    if (argumentsLength < 2) while (true) {
+      if (index in self) {
+        memo = self[index];
+        index += i;
+        break;
+      }
+      index += i;
+      if (IS_RIGHT ? index < 0 : length <= index) {
+        throw TypeError('Reduce of empty array with no initial value');
+      }
+    }
+    for (;IS_RIGHT ? index >= 0 : length > index; index += i) if (index in self) {
+      memo = callbackfn(memo, self[index], index, O);
+    }
+    return memo;
+  };
+};
+
+var arrayReduce = {
+  // `Array.prototype.reduce` method
+  // https://tc39.es/ecma262/#sec-array.prototype.reduce
+  left: createMethod$1(false),
+  // `Array.prototype.reduceRight` method
+  // https://tc39.es/ecma262/#sec-array.prototype.reduceright
+  right: createMethod$1(true)
+};
+
+var engineIsNode = classofRaw(global_1.process) == 'process';
+
+var $reduce = arrayReduce.left;
+
+
+
+
+var STRICT_METHOD = arrayMethodIsStrict('reduce');
+// Chrome 80-82 has a critical bug
+// https://bugs.chromium.org/p/chromium/issues/detail?id=1049982
+var CHROME_BUG = !engineIsNode && engineV8Version > 79 && engineV8Version < 83;
+
+// `Array.prototype.reduce` method
+// https://tc39.es/ecma262/#sec-array.prototype.reduce
+_export({ target: 'Array', proto: true, forced: !STRICT_METHOD || CHROME_BUG }, {
+  reduce: function reduce(callbackfn /* , initialValue */) {
+    return $reduce(this, callbackfn, arguments.length, arguments.length > 1 ? arguments[1] : undefined);
+  }
+});
+
+var SPECIES = wellKnownSymbol('species');
+
+// `SpeciesConstructor` abstract operation
+// https://tc39.es/ecma262/#sec-speciesconstructor
+var speciesConstructor = function (O, defaultConstructor) {
+  var C = anObject(O).constructor;
+  var S;
+  return C === undefined || (S = anObject(C)[SPECIES]) == undefined ? defaultConstructor : aFunction$1(S);
 };
 
 // `RegExp.prototype.flags` getter implementation
@@ -641,6 +863,12 @@ var regexpStickyHelpers = {
 	BROKEN_CARET: BROKEN_CARET
 };
 
+/* eslint-disable regexp/no-assertion-capturing-group, regexp/no-empty-group, regexp/no-lazy-ends -- testing */
+/* eslint-disable regexp/no-useless-quantifier -- testing */
+
+
+
+
 var nativeExec = RegExp.prototype.exec;
 var nativeReplace = shared('native-string-replace', String.prototype.replace);
 
@@ -657,7 +885,6 @@ var UPDATES_LAST_INDEX_WRONG = (function () {
 var UNSUPPORTED_Y$1 = regexpStickyHelpers.UNSUPPORTED_Y || regexpStickyHelpers.BROKEN_CARET;
 
 // nonparticipating capturing group, copied from es5-shim's String#split patch.
-// eslint-disable-next-line regexp/no-assertion-capturing-group, regexp/no-empty-group -- required for testing
 var NPCG_INCLUDED = /()??/.exec('')[1] !== undefined;
 
 var PATCH = UPDATES_LAST_INDEX_WRONG || NPCG_INCLUDED || UNSUPPORTED_Y$1;
@@ -730,7 +957,7 @@ _export({ target: 'RegExp', proto: true, forced: /./.exec !== regexpExec }, {
 });
 
 // `String.prototype.{ codePointAt, at }` methods implementation
-var createMethod$1 = function (CONVERT_TO_STRING) {
+var createMethod$2 = function (CONVERT_TO_STRING) {
   return function ($this, pos) {
     var S = String(requireObjectCoercible($this));
     var position = toInteger(pos);
@@ -748,10 +975,10 @@ var createMethod$1 = function (CONVERT_TO_STRING) {
 var stringMultibyte = {
   // `String.prototype.codePointAt` method
   // https://tc39.es/ecma262/#sec-string.prototype.codepointat
-  codeAt: createMethod$1(false),
+  codeAt: createMethod$2(false),
   // `String.prototype.at` method
   // https://github.com/mathiasbynens/String.prototype.at
-  charAt: createMethod$1(true)
+  charAt: createMethod$2(true)
 };
 
 // TODO: Remove from `core-js@4` since it's moved to entry points
@@ -761,7 +988,9 @@ var stringMultibyte = {
 
 
 
-var SPECIES = wellKnownSymbol('species');
+
+var SPECIES$1 = wellKnownSymbol('species');
+var RegExpPrototype = RegExp.prototype;
 
 var REPLACE_SUPPORTS_NAMED_GROUPS = !fails(function () {
   // #replace needs built-in support for named groups.
@@ -826,7 +1055,7 @@ var fixRegexpWellKnownSymbolLogic = function (KEY, length, exec, sham) {
       // RegExp[@@split] doesn't call the regex's exec method, but first creates
       // a new one. We need to return the patched regex when creating the new one.
       re.constructor = {};
-      re.constructor[SPECIES] = function () { return re; };
+      re.constructor[SPECIES$1] = function () { return re; };
       re.flags = '';
       re[SYMBOL] = /./[SYMBOL];
     }
@@ -849,7 +1078,8 @@ var fixRegexpWellKnownSymbolLogic = function (KEY, length, exec, sham) {
   ) {
     var nativeRegExpMethod = /./[SYMBOL];
     var methods = exec(SYMBOL, ''[KEY], function (nativeMethod, regexp, str, arg2, forceStringMethod) {
-      if (regexp.exec === RegExp.prototype.exec) {
+      var $exec = regexp.exec;
+      if ($exec === regexpExec || $exec === RegExpPrototype.exec) {
         if (DELEGATES_TO_SYMBOL && !forceStringMethod) {
           // The native String method already delegates to @@method (this
           // polyfilled function), leasing to infinite recursion.
@@ -867,7 +1097,7 @@ var fixRegexpWellKnownSymbolLogic = function (KEY, length, exec, sham) {
     var regexMethod = methods[1];
 
     redefine(String.prototype, KEY, stringMethod);
-    redefine(RegExp.prototype, SYMBOL, length == 2
+    redefine(RegExpPrototype, SYMBOL, length == 2
       // 21.2.5.8 RegExp.prototype[@@replace](string, replaceValue)
       // 21.2.5.11 RegExp.prototype[@@split](string, limit)
       ? function (string, arg) { return regexMethod.call(string, this, arg); }
@@ -877,7 +1107,7 @@ var fixRegexpWellKnownSymbolLogic = function (KEY, length, exec, sham) {
     );
   }
 
-  if (sham) createNonEnumerableProperty(RegExp.prototype[SYMBOL], 'sham', true);
+  if (sham) createNonEnumerableProperty(RegExpPrototype[SYMBOL], 'sham', true);
 };
 
 var charAt = stringMultibyte.charAt;
@@ -912,6 +1142,7 @@ var replace = ''.replace;
 var SUBSTITUTION_SYMBOLS = /\$([$&'`]|\d{1,2}|<[^>]*>)/g;
 var SUBSTITUTION_SYMBOLS_NO_NAMED = /\$([$&'`]|\d{1,2})/g;
 
+// `GetSubstitution` abstract operation
 // https://tc39.es/ecma262/#sec-getsubstitution
 var getSubstitution = function (matched, str, position, captures, namedCaptures, replacement) {
   var tailPos = position + matched.length;
@@ -1035,4 +1266,451 @@ fixRegexpWellKnownSymbolLogic('replace', 2, function (REPLACE, nativeReplace, ma
   ];
 });
 
-export { regexpExec as $, createNonEnumerableProperty as A, objectGetOwnPropertyDescriptor as B, toPrimitive as C, createPropertyDescriptor as D, objectGetOwnPropertySymbols as E, objectPropertyIsEnumerable as F, useSymbolAsUid as G, copyConstructorProperties as H, engineV8Version as I, toAbsoluteIndex as J, toInteger as K, arrayIncludes as L, engineIsNode as M, requireObjectCoercible as N, createCommonjsModule as O, isForced_1 as P, ownKeys as Q, engineUserAgent as R, inspectSource as S, regexpStickyHelpers as T, regexpFlags as U, stringMultibyte as V, fixRegexpWellKnownSymbolLogic as W, regexpExecAbstract as X, advanceStringIndex as Y, getSubstitution as Z, _export as _, anObject as a, nativeWeakMap as a0, sharedStore as a1, objectDefineProperty as b, classofRaw as c, descriptors as d, enumBugKeys as e, documentCreateElement as f, getBuiltIn as g, hiddenKeys as h, objectGetOwnPropertyNames as i, has as j, isObject as k, toObject as l, indexedObject as m, toLength as n, objectKeysInternal as o, path as p, internalState as q, global_1 as r, sharedKey as s, toIndexedObject as t, shared as u, fails as v, wellKnownSymbol as w, nativeSymbol as x, uid as y, redefine as z };
+// https://github.com/tc39/collection-methods
+var collectionDeleteAll = function (/* ...elements */) {
+  var collection = anObject(this);
+  var remover = aFunction$1(collection['delete']);
+  var allDeleted = true;
+  var wasDeleted;
+  for (var k = 0, len = arguments.length; k < len; k++) {
+    wasDeleted = remover.call(collection, arguments[k]);
+    allDeleted = allDeleted && wasDeleted;
+  }
+  return !!allDeleted;
+};
+
+// `Map.prototype.deleteAll` method
+// https://github.com/tc39/proposal-collection-methods
+_export({ target: 'Map', proto: true, real: true, forced: isPure }, {
+  deleteAll: function deleteAll(/* ...elements */) {
+    return collectionDeleteAll.apply(this, arguments);
+  }
+});
+
+var getIterator = function (it) {
+  var iteratorMethod = getIteratorMethod(it);
+  if (typeof iteratorMethod != 'function') {
+    throw TypeError(String(it) + ' is not iterable');
+  } return anObject(iteratorMethod.call(it));
+};
+
+var getMapIterator =  function (it) {
+  // eslint-disable-next-line es/no-map -- safe
+  return Map.prototype.entries.call(it);
+};
+
+// `Map.prototype.every` method
+// https://github.com/tc39/proposal-collection-methods
+_export({ target: 'Map', proto: true, real: true, forced: isPure }, {
+  every: function every(callbackfn /* , thisArg */) {
+    var map = anObject(this);
+    var iterator = getMapIterator(map);
+    var boundFunction = functionBindContext(callbackfn, arguments.length > 1 ? arguments[1] : undefined, 3);
+    return !iterate(iterator, function (key, value, stop) {
+      if (!boundFunction(value, key, map)) return stop();
+    }, { AS_ENTRIES: true, IS_ITERATOR: true, INTERRUPTED: true }).stopped;
+  }
+});
+
+// `Map.prototype.filter` method
+// https://github.com/tc39/proposal-collection-methods
+_export({ target: 'Map', proto: true, real: true, forced: isPure }, {
+  filter: function filter(callbackfn /* , thisArg */) {
+    var map = anObject(this);
+    var iterator = getMapIterator(map);
+    var boundFunction = functionBindContext(callbackfn, arguments.length > 1 ? arguments[1] : undefined, 3);
+    var newMap = new (speciesConstructor(map, getBuiltIn('Map')))();
+    var setter = aFunction$1(newMap.set);
+    iterate(iterator, function (key, value) {
+      if (boundFunction(value, key, map)) setter.call(newMap, key, value);
+    }, { AS_ENTRIES: true, IS_ITERATOR: true });
+    return newMap;
+  }
+});
+
+// `Map.prototype.find` method
+// https://github.com/tc39/proposal-collection-methods
+_export({ target: 'Map', proto: true, real: true, forced: isPure }, {
+  find: function find(callbackfn /* , thisArg */) {
+    var map = anObject(this);
+    var iterator = getMapIterator(map);
+    var boundFunction = functionBindContext(callbackfn, arguments.length > 1 ? arguments[1] : undefined, 3);
+    return iterate(iterator, function (key, value, stop) {
+      if (boundFunction(value, key, map)) return stop(value);
+    }, { AS_ENTRIES: true, IS_ITERATOR: true, INTERRUPTED: true }).result;
+  }
+});
+
+// `Map.prototype.findKey` method
+// https://github.com/tc39/proposal-collection-methods
+_export({ target: 'Map', proto: true, real: true, forced: isPure }, {
+  findKey: function findKey(callbackfn /* , thisArg */) {
+    var map = anObject(this);
+    var iterator = getMapIterator(map);
+    var boundFunction = functionBindContext(callbackfn, arguments.length > 1 ? arguments[1] : undefined, 3);
+    return iterate(iterator, function (key, value, stop) {
+      if (boundFunction(value, key, map)) return stop(key);
+    }, { AS_ENTRIES: true, IS_ITERATOR: true, INTERRUPTED: true }).result;
+  }
+});
+
+// `SameValueZero` abstract operation
+// https://tc39.es/ecma262/#sec-samevaluezero
+var sameValueZero = function (x, y) {
+  // eslint-disable-next-line no-self-compare -- NaN check
+  return x === y || x != x && y != y;
+};
+
+// `Map.prototype.includes` method
+// https://github.com/tc39/proposal-collection-methods
+_export({ target: 'Map', proto: true, real: true, forced: isPure }, {
+  includes: function includes(searchElement) {
+    return iterate(getMapIterator(anObject(this)), function (key, value, stop) {
+      if (sameValueZero(value, searchElement)) return stop();
+    }, { AS_ENTRIES: true, IS_ITERATOR: true, INTERRUPTED: true }).stopped;
+  }
+});
+
+// `Map.prototype.includes` method
+// https://github.com/tc39/proposal-collection-methods
+_export({ target: 'Map', proto: true, real: true, forced: isPure }, {
+  keyOf: function keyOf(searchElement) {
+    return iterate(getMapIterator(anObject(this)), function (key, value, stop) {
+      if (value === searchElement) return stop(key);
+    }, { AS_ENTRIES: true, IS_ITERATOR: true, INTERRUPTED: true }).result;
+  }
+});
+
+// `Map.prototype.mapKeys` method
+// https://github.com/tc39/proposal-collection-methods
+_export({ target: 'Map', proto: true, real: true, forced: isPure }, {
+  mapKeys: function mapKeys(callbackfn /* , thisArg */) {
+    var map = anObject(this);
+    var iterator = getMapIterator(map);
+    var boundFunction = functionBindContext(callbackfn, arguments.length > 1 ? arguments[1] : undefined, 3);
+    var newMap = new (speciesConstructor(map, getBuiltIn('Map')))();
+    var setter = aFunction$1(newMap.set);
+    iterate(iterator, function (key, value) {
+      setter.call(newMap, boundFunction(value, key, map), value);
+    }, { AS_ENTRIES: true, IS_ITERATOR: true });
+    return newMap;
+  }
+});
+
+// `Map.prototype.mapValues` method
+// https://github.com/tc39/proposal-collection-methods
+_export({ target: 'Map', proto: true, real: true, forced: isPure }, {
+  mapValues: function mapValues(callbackfn /* , thisArg */) {
+    var map = anObject(this);
+    var iterator = getMapIterator(map);
+    var boundFunction = functionBindContext(callbackfn, arguments.length > 1 ? arguments[1] : undefined, 3);
+    var newMap = new (speciesConstructor(map, getBuiltIn('Map')))();
+    var setter = aFunction$1(newMap.set);
+    iterate(iterator, function (key, value) {
+      setter.call(newMap, key, boundFunction(value, key, map));
+    }, { AS_ENTRIES: true, IS_ITERATOR: true });
+    return newMap;
+  }
+});
+
+// `Map.prototype.merge` method
+// https://github.com/tc39/proposal-collection-methods
+_export({ target: 'Map', proto: true, real: true, forced: isPure }, {
+  // eslint-disable-next-line no-unused-vars -- required for `.length`
+  merge: function merge(iterable /* ...iterbles */) {
+    var map = anObject(this);
+    var setter = aFunction$1(map.set);
+    var i = 0;
+    while (i < arguments.length) {
+      iterate(arguments[i++], setter, { that: map, AS_ENTRIES: true });
+    }
+    return map;
+  }
+});
+
+// `Map.prototype.reduce` method
+// https://github.com/tc39/proposal-collection-methods
+_export({ target: 'Map', proto: true, real: true, forced: isPure }, {
+  reduce: function reduce(callbackfn /* , initialValue */) {
+    var map = anObject(this);
+    var iterator = getMapIterator(map);
+    var noInitial = arguments.length < 2;
+    var accumulator = noInitial ? undefined : arguments[1];
+    aFunction$1(callbackfn);
+    iterate(iterator, function (key, value) {
+      if (noInitial) {
+        noInitial = false;
+        accumulator = value;
+      } else {
+        accumulator = callbackfn(accumulator, value, key, map);
+      }
+    }, { AS_ENTRIES: true, IS_ITERATOR: true });
+    if (noInitial) throw TypeError('Reduce of empty map with no initial value');
+    return accumulator;
+  }
+});
+
+// `Set.prototype.some` method
+// https://github.com/tc39/proposal-collection-methods
+_export({ target: 'Map', proto: true, real: true, forced: isPure }, {
+  some: function some(callbackfn /* , thisArg */) {
+    var map = anObject(this);
+    var iterator = getMapIterator(map);
+    var boundFunction = functionBindContext(callbackfn, arguments.length > 1 ? arguments[1] : undefined, 3);
+    return iterate(iterator, function (key, value, stop) {
+      if (boundFunction(value, key, map)) return stop();
+    }, { AS_ENTRIES: true, IS_ITERATOR: true, INTERRUPTED: true }).stopped;
+  }
+});
+
+// `Set.prototype.update` method
+// https://github.com/tc39/proposal-collection-methods
+_export({ target: 'Map', proto: true, real: true, forced: isPure }, {
+  update: function update(key, callback /* , thunk */) {
+    var map = anObject(this);
+    var length = arguments.length;
+    aFunction$1(callback);
+    var isPresentInMap = map.has(key);
+    if (!isPresentInMap && length < 3) {
+      throw TypeError('Updating absent value');
+    }
+    var value = isPresentInMap ? map.get(key) : aFunction$1(length > 2 ? arguments[2] : undefined)(key, map);
+    map.set(key, callback(value, key, map));
+    return map;
+  }
+});
+
+// https://github.com/tc39/collection-methods
+var collectionAddAll = function (/* ...elements */) {
+  var set = anObject(this);
+  var adder = aFunction$1(set.add);
+  for (var k = 0, len = arguments.length; k < len; k++) {
+    adder.call(set, arguments[k]);
+  }
+  return set;
+};
+
+// `Set.prototype.addAll` method
+// https://github.com/tc39/proposal-collection-methods
+_export({ target: 'Set', proto: true, real: true, forced: isPure }, {
+  addAll: function addAll(/* ...elements */) {
+    return collectionAddAll.apply(this, arguments);
+  }
+});
+
+// `Set.prototype.deleteAll` method
+// https://github.com/tc39/proposal-collection-methods
+_export({ target: 'Set', proto: true, real: true, forced: isPure }, {
+  deleteAll: function deleteAll(/* ...elements */) {
+    return collectionDeleteAll.apply(this, arguments);
+  }
+});
+
+// `Set.prototype.difference` method
+// https://github.com/tc39/proposal-set-methods
+_export({ target: 'Set', proto: true, real: true, forced: isPure }, {
+  difference: function difference(iterable) {
+    var set = anObject(this);
+    var newSet = new (speciesConstructor(set, getBuiltIn('Set')))(set);
+    var remover = aFunction$1(newSet['delete']);
+    iterate(iterable, function (value) {
+      remover.call(newSet, value);
+    });
+    return newSet;
+  }
+});
+
+var getSetIterator =  function (it) {
+  // eslint-disable-next-line es/no-set -- safe
+  return Set.prototype.values.call(it);
+};
+
+// `Set.prototype.every` method
+// https://github.com/tc39/proposal-collection-methods
+_export({ target: 'Set', proto: true, real: true, forced: isPure }, {
+  every: function every(callbackfn /* , thisArg */) {
+    var set = anObject(this);
+    var iterator = getSetIterator(set);
+    var boundFunction = functionBindContext(callbackfn, arguments.length > 1 ? arguments[1] : undefined, 3);
+    return !iterate(iterator, function (value, stop) {
+      if (!boundFunction(value, value, set)) return stop();
+    }, { IS_ITERATOR: true, INTERRUPTED: true }).stopped;
+  }
+});
+
+// `Set.prototype.filter` method
+// https://github.com/tc39/proposal-collection-methods
+_export({ target: 'Set', proto: true, real: true, forced: isPure }, {
+  filter: function filter(callbackfn /* , thisArg */) {
+    var set = anObject(this);
+    var iterator = getSetIterator(set);
+    var boundFunction = functionBindContext(callbackfn, arguments.length > 1 ? arguments[1] : undefined, 3);
+    var newSet = new (speciesConstructor(set, getBuiltIn('Set')))();
+    var adder = aFunction$1(newSet.add);
+    iterate(iterator, function (value) {
+      if (boundFunction(value, value, set)) adder.call(newSet, value);
+    }, { IS_ITERATOR: true });
+    return newSet;
+  }
+});
+
+// `Set.prototype.find` method
+// https://github.com/tc39/proposal-collection-methods
+_export({ target: 'Set', proto: true, real: true, forced: isPure }, {
+  find: function find(callbackfn /* , thisArg */) {
+    var set = anObject(this);
+    var iterator = getSetIterator(set);
+    var boundFunction = functionBindContext(callbackfn, arguments.length > 1 ? arguments[1] : undefined, 3);
+    return iterate(iterator, function (value, stop) {
+      if (boundFunction(value, value, set)) return stop(value);
+    }, { IS_ITERATOR: true, INTERRUPTED: true }).result;
+  }
+});
+
+// `Set.prototype.intersection` method
+// https://github.com/tc39/proposal-set-methods
+_export({ target: 'Set', proto: true, real: true, forced: isPure }, {
+  intersection: function intersection(iterable) {
+    var set = anObject(this);
+    var newSet = new (speciesConstructor(set, getBuiltIn('Set')))();
+    var hasCheck = aFunction$1(set.has);
+    var adder = aFunction$1(newSet.add);
+    iterate(iterable, function (value) {
+      if (hasCheck.call(set, value)) adder.call(newSet, value);
+    });
+    return newSet;
+  }
+});
+
+// `Set.prototype.isDisjointFrom` method
+// https://tc39.github.io/proposal-set-methods/#Set.prototype.isDisjointFrom
+_export({ target: 'Set', proto: true, real: true, forced: isPure }, {
+  isDisjointFrom: function isDisjointFrom(iterable) {
+    var set = anObject(this);
+    var hasCheck = aFunction$1(set.has);
+    return !iterate(iterable, function (value, stop) {
+      if (hasCheck.call(set, value) === true) return stop();
+    }, { INTERRUPTED: true }).stopped;
+  }
+});
+
+// `Set.prototype.isSubsetOf` method
+// https://tc39.github.io/proposal-set-methods/#Set.prototype.isSubsetOf
+_export({ target: 'Set', proto: true, real: true, forced: isPure }, {
+  isSubsetOf: function isSubsetOf(iterable) {
+    var iterator = getIterator(this);
+    var otherSet = anObject(iterable);
+    var hasCheck = otherSet.has;
+    if (typeof hasCheck != 'function') {
+      otherSet = new (getBuiltIn('Set'))(iterable);
+      hasCheck = aFunction$1(otherSet.has);
+    }
+    return !iterate(iterator, function (value, stop) {
+      if (hasCheck.call(otherSet, value) === false) return stop();
+    }, { IS_ITERATOR: true, INTERRUPTED: true }).stopped;
+  }
+});
+
+// `Set.prototype.isSupersetOf` method
+// https://tc39.github.io/proposal-set-methods/#Set.prototype.isSupersetOf
+_export({ target: 'Set', proto: true, real: true, forced: isPure }, {
+  isSupersetOf: function isSupersetOf(iterable) {
+    var set = anObject(this);
+    var hasCheck = aFunction$1(set.has);
+    return !iterate(iterable, function (value, stop) {
+      if (hasCheck.call(set, value) === false) return stop();
+    }, { INTERRUPTED: true }).stopped;
+  }
+});
+
+// `Set.prototype.join` method
+// https://github.com/tc39/proposal-collection-methods
+_export({ target: 'Set', proto: true, real: true, forced: isPure }, {
+  join: function join(separator) {
+    var set = anObject(this);
+    var iterator = getSetIterator(set);
+    var sep = separator === undefined ? ',' : String(separator);
+    var result = [];
+    iterate(iterator, result.push, { that: result, IS_ITERATOR: true });
+    return result.join(sep);
+  }
+});
+
+// `Set.prototype.map` method
+// https://github.com/tc39/proposal-collection-methods
+_export({ target: 'Set', proto: true, real: true, forced: isPure }, {
+  map: function map(callbackfn /* , thisArg */) {
+    var set = anObject(this);
+    var iterator = getSetIterator(set);
+    var boundFunction = functionBindContext(callbackfn, arguments.length > 1 ? arguments[1] : undefined, 3);
+    var newSet = new (speciesConstructor(set, getBuiltIn('Set')))();
+    var adder = aFunction$1(newSet.add);
+    iterate(iterator, function (value) {
+      adder.call(newSet, boundFunction(value, value, set));
+    }, { IS_ITERATOR: true });
+    return newSet;
+  }
+});
+
+// `Set.prototype.reduce` method
+// https://github.com/tc39/proposal-collection-methods
+_export({ target: 'Set', proto: true, real: true, forced: isPure }, {
+  reduce: function reduce(callbackfn /* , initialValue */) {
+    var set = anObject(this);
+    var iterator = getSetIterator(set);
+    var noInitial = arguments.length < 2;
+    var accumulator = noInitial ? undefined : arguments[1];
+    aFunction$1(callbackfn);
+    iterate(iterator, function (value) {
+      if (noInitial) {
+        noInitial = false;
+        accumulator = value;
+      } else {
+        accumulator = callbackfn(accumulator, value, value, set);
+      }
+    }, { IS_ITERATOR: true });
+    if (noInitial) throw TypeError('Reduce of empty set with no initial value');
+    return accumulator;
+  }
+});
+
+// `Set.prototype.some` method
+// https://github.com/tc39/proposal-collection-methods
+_export({ target: 'Set', proto: true, real: true, forced: isPure }, {
+  some: function some(callbackfn /* , thisArg */) {
+    var set = anObject(this);
+    var iterator = getSetIterator(set);
+    var boundFunction = functionBindContext(callbackfn, arguments.length > 1 ? arguments[1] : undefined, 3);
+    return iterate(iterator, function (value, stop) {
+      if (boundFunction(value, value, set)) return stop();
+    }, { IS_ITERATOR: true, INTERRUPTED: true }).stopped;
+  }
+});
+
+// `Set.prototype.symmetricDifference` method
+// https://github.com/tc39/proposal-set-methods
+_export({ target: 'Set', proto: true, real: true, forced: isPure }, {
+  symmetricDifference: function symmetricDifference(iterable) {
+    var set = anObject(this);
+    var newSet = new (speciesConstructor(set, getBuiltIn('Set')))(set);
+    var remover = aFunction$1(newSet['delete']);
+    var adder = aFunction$1(newSet.add);
+    iterate(iterable, function (value) {
+      remover.call(newSet, value) || adder.call(newSet, value);
+    });
+    return newSet;
+  }
+});
+
+// `Set.prototype.union` method
+// https://github.com/tc39/proposal-set-methods
+_export({ target: 'Set', proto: true, real: true, forced: isPure }, {
+  union: function union(iterable) {
+    var set = anObject(this);
+    var newSet = new (speciesConstructor(set, getBuiltIn('Set')))(set);
+    iterate(iterable, aFunction$1(newSet.add), { that: newSet });
+    return newSet;
+  }
+});
+
+export { createCommonjsModule as $, redefine as A, createNonEnumerableProperty as B, objectGetOwnPropertyDescriptor as C, toPrimitive as D, createPropertyDescriptor as E, objectGetOwnPropertySymbols as F, objectPropertyIsEnumerable as G, useSymbolAsUid as H, copyConstructorProperties as I, iterate as J, engineV8Version as K, toAbsoluteIndex as L, arrayMethodIsStrict as M, toInteger as N, aFunction$1 as O, iteratorClose as P, getIteratorMethod as Q, isArrayIteratorMethod as R, arrayIncludes as S, iterators as T, arrayReduce as U, engineIsNode as V, engineUserAgent as W, classof as X, speciesConstructor as Y, requireObjectCoercible as Z, _export as _, anObject as a, isForced_1 as a0, ownKeys as a1, toStringTagSupport as a2, inspectSource as a3, regexpStickyHelpers as a4, regexpFlags as a5, stringMultibyte as a6, fixRegexpWellKnownSymbolLogic as a7, regexpExecAbstract as a8, advanceStringIndex as a9, isPure as aa, getSubstitution as ab, regexpExec as ac, nativeWeakMap as ad, sharedStore as ae, getIterator as af, collectionDeleteAll as ag, collectionAddAll as ah, getDefaultExportFromCjs as ai, commonjsGlobal as aj, objectDefineProperty as b, classofRaw as c, descriptors as d, enumBugKeys as e, documentCreateElement as f, getBuiltIn as g, hiddenKeys as h, objectGetOwnPropertyNames as i, has as j, isObject as k, toObject as l, indexedObject as m, functionBindContext as n, objectKeysInternal as o, path as p, toLength as q, internalState as r, sharedKey as s, toIndexedObject as t, global_1 as u, shared as v, wellKnownSymbol as w, fails as x, nativeSymbol as y, uid as z };

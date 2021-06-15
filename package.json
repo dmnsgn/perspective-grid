@@ -28,9 +28,9 @@
   "types": "types/index.d.ts",
   "devDependencies": {
     "canvas-context": "^3.0.2",
-    "core-js": "^3.10.1",
-    "dat.gui": "^0.7.7",
-    "es-module-shims": "^0.10.4"
+    "core-js": "^3.14.0",
+    "es-module-shims": "^0.10.7",
+    "tweakpane": "^3.0.2"
   },
   "engines": {
     "node": ">=15.0.0",

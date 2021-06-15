@@ -2,7 +2,7 @@
   "imports": {
     "canvas-context": "./canvas-context.js",
     "core-js": "./core-js.js",
-    "dat.gui": "./dat.gui.js",
-    "es-module-shims": "./es-module-shims.js"
+    "es-module-shims": "./es-module-shims.js",
+    "tweakpane": "./tweakpane.js"
   }
 }
