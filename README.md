@@ -27,7 +27,7 @@ npm install perspective-grid
 ## Usage
 
 ```js
-import PerspectiveGrid from "perspective-grid";
+import { PerspectiveGrid, Point } from "perspective-grid";
 import canvasContext from "canvas-context";
 
 const { context, canvas } = canvasContext("2d", {
@@ -36,7 +36,7 @@ const { context, canvas } = canvasContext("2d", {
 });
 
 // Alternatively pass [rows, columns] for a grid with different rows and column units
-const grid = new PerspectiveGrid(context, 10);
+const grid = new PerspectiveGrid(10);
 
 grid.init(
   new Point(300, 380),
@@ -48,16 +48,16 @@ grid.update();
 
 // Operations on lines...
 context.save();
-grid.drawLines();
+grid.drawLines(context);
 context.restore();
 
 context.save();
-grid.drawSquares();
+grid.drawSquares(context);
 context.restore();
 
 // ...or simply draw
 context.save();
-grid.draw();
+grid.draw(context);
 context.restore();
 ```
 
