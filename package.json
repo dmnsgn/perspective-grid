@@ -1,6 +1,6 @@
 {
   "name": "perspective-grid",
-  "version": "2.1.0",
+  "version": "3.0.0",
   "description": "Two point perspective grid on canvas.",
   "keywords": [
     "canvas",

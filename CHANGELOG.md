@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+# [3.0.0](https://github.com/dmnsgn/perspective-grid/compare/v2.1.0...v3.0.0) (2021-11-13)
+
+
+### Features
+
+* remove context from PerspectiveGrid constructor ([5460cc0](https://github.com/dmnsgn/perspective-grid/commit/5460cc0c34ddb040187b64418984a873e1f5fa86))
+
+
+### BREAKING CHANGES
+
+* - remove PerspectiveGrid context argument
+- drawLines/drawSquares need context argument
+
+
+
 # [2.1.0](https://github.com/dmnsgn/perspective-grid/compare/v2.0.2...v2.1.0) (2021-10-02)
 
 

@@ -286,15 +286,15 @@ Get the center of four points
 
 - [PerspectiveGrid](#module_PerspectiveGrid)
   - [PerspectiveGrid](#exp_module_PerspectiveGrid--PerspectiveGrid) ⏏
-    - [new PerspectiveGrid(context, units, [squares])](#new_module_PerspectiveGrid--PerspectiveGrid_new)
+    - [new PerspectiveGrid(units, [squares])](#new_module_PerspectiveGrid--PerspectiveGrid_new)
     - [.init(tl, tr, br, bl)](#module_PerspectiveGrid--PerspectiveGrid+init)
-    - [.draw()](#module_PerspectiveGrid--PerspectiveGrid+draw)
+    - [.draw(context)](#module_PerspectiveGrid--PerspectiveGrid+draw)
     - [.update()](#module_PerspectiveGrid--PerspectiveGrid+update)
     - [.getQuadAt(column, row)](#module_PerspectiveGrid--PerspectiveGrid+getQuadAt) ⇒ <code>Array.&lt;Point&gt;</code>
     - [.getCenterAt(column, row)](#module_PerspectiveGrid--PerspectiveGrid+getCenterAt) ⇒ <code>Point</code>
-    - [.drawLines()](#module_PerspectiveGrid--PerspectiveGrid+drawLines)
-    - [.drawSquares()](#module_PerspectiveGrid--PerspectiveGrid+drawSquares)
-    - [.drawPoint(point, radius, color)](#module_PerspectiveGrid--PerspectiveGrid+drawPoint)
+    - [.drawLines(context)](#module_PerspectiveGrid--PerspectiveGrid+drawLines)
+    - [.drawSquares(context)](#module_PerspectiveGrid--PerspectiveGrid+drawSquares)
+    - [.drawPoint(context, point, radius, color)](#module_PerspectiveGrid--PerspectiveGrid+drawPoint)
     - [.\_getHorizon(vVanishing, hVanishing)](#module_PerspectiveGrid--PerspectiveGrid+_getHorizon) ⇒ <code>Object</code>
 
 <a name="exp_module_PerspectiveGrid--PerspectiveGrid"></a>
@@ -308,13 +308,12 @@ Note: Does not work correctly when there is only one vanishing point.
 **Kind**: Exported class  
 <a name="new_module_PerspectiveGrid--PerspectiveGrid_new"></a>
 
-#### new PerspectiveGrid(context, units, [squares])
+#### new PerspectiveGrid(units, [squares])
 
 Creates an instance of PerspectiveGrid.
 
 | Param     | Type                                                     | Description                                           |
 | --------- | -------------------------------------------------------- | ----------------------------------------------------- |
-| context   | <code>CanvasRenderingContext2D</code>                    | The context to draw the grid in                       |
 | units     | <code>number</code> \| <code>Array.&lt;number&gt;</code> | Number of rows and columns (unit or [rows, columns]). |
 | [squares] | <code>Array.&lt;Point&gt;</code>                         | Highlighted squares in the grid                       |
 
@@ -335,11 +334,16 @@ Reset the corners (clockwise starting from top left)
 
 <a name="module_PerspectiveGrid--PerspectiveGrid+draw"></a>
 
-#### perspectiveGrid.draw()
+#### perspectiveGrid.draw(context)
 
 Draw the grid in the instance context
 
-**Kind**: instance method of [<code>PerspectiveGrid</code>](#exp_module_PerspectiveGrid--PerspectiveGrid)  
+**Kind**: instance method of [<code>PerspectiveGrid</code>](#exp_module_PerspectiveGrid--PerspectiveGrid)
+
+| Param   | Type                                  | Description                     |
+| ------- | ------------------------------------- | ------------------------------- |
+| context | <code>CanvasRenderingContext2D</code> | The context to draw the grid in |
+
 <a name="module_PerspectiveGrid--PerspectiveGrid+update"></a>
 
 #### perspectiveGrid.update()
@@ -375,31 +379,42 @@ Get the center point from grid unit to pixel eg. (1, 1) is the first top left po
 
 <a name="module_PerspectiveGrid--PerspectiveGrid+drawLines"></a>
 
-#### perspectiveGrid.drawLines()
+#### perspectiveGrid.drawLines(context)
 
 Actually draw the lines (vertical and horizontal) in the context
 
-**Kind**: instance method of [<code>PerspectiveGrid</code>](#exp_module_PerspectiveGrid--PerspectiveGrid)  
+**Kind**: instance method of [<code>PerspectiveGrid</code>](#exp_module_PerspectiveGrid--PerspectiveGrid)
+
+| Param   | Type                                  | Description                     |
+| ------- | ------------------------------------- | ------------------------------- |
+| context | <code>CanvasRenderingContext2D</code> | The context to draw the grid in |
+
 <a name="module_PerspectiveGrid--PerspectiveGrid+drawSquares"></a>
 
-#### perspectiveGrid.drawSquares()
+#### perspectiveGrid.drawSquares(context)
 
 Draw highlighted squares in the grid
 
-**Kind**: instance method of [<code>PerspectiveGrid</code>](#exp_module_PerspectiveGrid--PerspectiveGrid)  
+**Kind**: instance method of [<code>PerspectiveGrid</code>](#exp_module_PerspectiveGrid--PerspectiveGrid)
+
+| Param   | Type                                  | Description                     |
+| ------- | ------------------------------------- | ------------------------------- |
+| context | <code>CanvasRenderingContext2D</code> | The context to draw the grid in |
+
 <a name="module_PerspectiveGrid--PerspectiveGrid+drawPoint"></a>
 
-#### perspectiveGrid.drawPoint(point, radius, color)
+#### perspectiveGrid.drawPoint(context, point, radius, color)
 
 Draw a single point in the grid useful for debug purpose
 
 **Kind**: instance method of [<code>PerspectiveGrid</code>](#exp_module_PerspectiveGrid--PerspectiveGrid)
 
-| Param  | Type                |
-| ------ | ------------------- |
-| point  | <code>Point</code>  |
-| radius | <code>number</code> |
-| color  | <code>string</code> |
+| Param   | Type                                  | Description                     |
+| ------- | ------------------------------------- | ------------------------------- |
+| context | <code>CanvasRenderingContext2D</code> | The context to draw the grid in |
+| point   | <code>Point</code>                    |                                 |
+| radius  | <code>number</code>                   |                                 |
+| color   | <code>string</code>                   |                                 |
 
 <a name="module_PerspectiveGrid--PerspectiveGrid+_getHorizon"></a>
 
