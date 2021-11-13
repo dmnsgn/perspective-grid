@@ -1,4 +1,4 @@
-export { default as default } from "./src/PerspectiveGrid.js";
+export { default as PerspectiveGrid } from "./src/PerspectiveGrid.js";
 
 export { default as LineEquation } from "./src/LineEquation.js";
 export { default as LineType } from "./src/LineType.js";

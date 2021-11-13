@@ -40,13 +40,14 @@
     <script src="web_modules/import-map.json" type="importmap"></script>
 
     <script type="module">
-      import PerspectiveGrid, { Point } from "./index.js";
+      import { PerspectiveGrid, Point } from "./index.js";
 
       import canvasContext from "canvas-context";
       import { Pane } from "tweakpane";
 
       const CONFIG = {
         direction: "top",
+        debug: false,
       };
 
       // Create canvas
@@ -58,6 +59,8 @@
       document.querySelector("main").appendChild(canvas);
 
       // Instantiate the grid
+      const gridRow = 10;
+      const gridColumn = 20;
       const squares = [
         new Point(1, 1),
         new Point(1, 2),
@@ -83,7 +86,7 @@
         new Point(7, 8),
       ];
 
-      const grid = new PerspectiveGrid(context, [10, 20], squares);
+      const grid = new PerspectiveGrid([gridRow, gridColumn], squares);
 
       const grids = {
         top: [
@@ -110,7 +113,6 @@
         grid.init(...grids[CONFIG.direction]);
 
         grid.update();
-        grid.debug = true;
 
         // Draw
         context.save();
@@ -124,7 +126,7 @@
         context.strokeStyle = "seashell";
         context.lineWidth = 1;
 
-        grid.drawLines();
+        grid.drawLines(context);
 
         context.restore();
 
@@ -132,9 +134,21 @@
         context.globalAlpha = 0.9;
         context.fillStyle = "mistyrose";
 
-        grid.drawSquares();
+        grid.drawSquares(context);
 
         context.restore();
+
+        // Debug
+        if (CONFIG.debug) {
+          grid.debug = context;
+        } else {
+          grid.debug = false;
+        }
+        for (let x = 1; x <= gridColumn; x++) {
+          for (let y = 1; y <= gridRow; y++) {
+            grid.getCenterAt(x, y);
+          }
+        }
       };
 
       const pane = new Pane();
@@ -146,6 +160,7 @@
           })),
         })
         .on("change", () => draw());
+      pane.addInput(CONFIG, "debug").on("change", () => draw());
 
       draw();
     </script>

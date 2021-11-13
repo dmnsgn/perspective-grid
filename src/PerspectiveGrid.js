@@ -18,12 +18,10 @@ import * as MathHelper from "./MathHelper.js";
 class PerspectiveGrid {
   /**
    * Creates an instance of PerspectiveGrid.
-   * @param {CanvasRenderingContext2D} context The context to draw the grid in
    * @param {number|Array<number>} units Number of rows and columns (unit or [rows, columns]).
    * @param {Array<Point>} [squares] Highlighted squares in the grid
    */
-  constructor(context, units, squares) {
-    this.context = context;
+  constructor(units, squares) {
     [this.rows, this.columns] = Array.isArray(units) ? units : [units, units];
     this.squares = squares || [];
   }
@@ -64,10 +62,11 @@ class PerspectiveGrid {
 
   /**
    * Draw the grid in the instance context
+   * @param {CanvasRenderingContext2D} context The context to draw the grid in
    */
-  draw() {
-    this.drawSquares();
-    this.drawLines();
+  draw(context) {
+    this.drawSquares(context);
+    this.drawLines(context);
   }
 
   /**
@@ -176,10 +175,10 @@ class PerspectiveGrid {
     const p4 = this.horizontal[row].intersect(this.vertical[column]);
 
     if (this.debug) {
-      this.drawPoint(p1, 4, "black");
-      this.drawPoint(p2, 4, "black");
-      this.drawPoint(p3, 4, "black");
-      this.drawPoint(p4, 4, "black");
+      this.drawPoint(this.debug, p1, 4, "black");
+      this.drawPoint(this.debug, p2, 4, "black");
+      this.drawPoint(this.debug, p3, 4, "black");
+      this.drawPoint(this.debug, p4, 4, "black");
     }
 
     return [p1, p2, p3, p4];
@@ -198,7 +197,7 @@ class PerspectiveGrid {
     );
 
     if (this.debug) {
-      this.drawPoint(center, 4);
+      this.drawPoint(this.debug, center, 4);
     }
 
     return center;
@@ -206,23 +205,25 @@ class PerspectiveGrid {
 
   /**
    * Actually draw the lines (vertical and horizontal) in the context
+   * @param {CanvasRenderingContext2D} context The context to draw the grid in
    */
-  drawLines() {
+  drawLines(context) {
     const segments = this.vertical.concat(this.horizontal);
 
     for (let i = 0; i < segments.length; i++) {
-      this.context.beginPath();
-      this.context.moveTo(segments[i].p1.x, segments[i].p1.y);
-      this.context.lineTo(segments[i].p2.x, segments[i].p2.y);
-      this.context.stroke();
-      this.context.closePath();
+      context.beginPath();
+      context.moveTo(segments[i].p1.x, segments[i].p1.y);
+      context.lineTo(segments[i].p2.x, segments[i].p2.y);
+      context.stroke();
+      context.closePath();
     }
   }
 
   /**
    * Draw highlighted squares in the grid
+   * @param {CanvasRenderingContext2D} context The context to draw the grid in
    */
-  drawSquares() {
+  drawSquares(context) {
     const points = this.squares;
 
     for (let i = 0; i < points.length; i++) {
@@ -239,25 +240,26 @@ class PerspectiveGrid {
       const p3 = this.horizontal[point.y].intersect(this.vertical[point.x - 1]);
       const p4 = this.horizontal[point.y].intersect(this.vertical[point.x]);
 
-      this.context.moveTo(p1.x, p1.y);
-      this.context.lineTo(p2.x, p2.y);
-      this.context.lineTo(p4.x, p4.y);
-      this.context.lineTo(p3.x, p3.y);
+      context.moveTo(p1.x, p1.y);
+      context.lineTo(p2.x, p2.y);
+      context.lineTo(p4.x, p4.y);
+      context.lineTo(p3.x, p3.y);
     }
 
-    this.context.fill();
+    context.fill();
   }
 
   /**
    * Draw a single point in the grid useful for debug purpose
+   * @param {CanvasRenderingContext2D} context The context to draw the grid in
    * @param {Point} point
    * @param {number} radius
    * @param {string} color
    */
-  drawPoint(point, radius, color) {
-    this.context.save();
-    this.context.beginPath();
-    this.context.arc(
+  drawPoint(context, point, radius, color) {
+    context.save();
+    context.beginPath();
+    context.arc(
       point.x - radius / 2,
       point.y - radius / 2,
       radius,
@@ -265,9 +267,9 @@ class PerspectiveGrid {
       MathHelper.TWO_PI,
       false
     );
-    this.context.fillStyle = color || "grey";
-    this.context.fill();
-    this.context.restore();
+    context.fillStyle = color || "grey";
+    context.fill();
+    context.restore();
   }
 
   /**
