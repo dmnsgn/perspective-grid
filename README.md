@@ -97,7 +97,7 @@ context.restore();
 
 LineEquation defines a line equation or vertical
 
-**Kind**: Exported class  
+**Kind**: Exported class
 <a name="new_module_LineEquation--LineEquation_new"></a>
 
 #### new LineEquation(lineParams, x)
@@ -157,24 +157,24 @@ A faked ENUM for referencing line types.
 
 ### MathHelper.EPSILON : <code>number</code>
 
-**Kind**: static constant of [<code>MathHelper</code>](#module_MathHelper)  
+**Kind**: static constant of [<code>MathHelper</code>](#module_MathHelper)
 <a name="module_MathHelper.PI"></a>
 
 ### MathHelper.PI : <code>number</code>
 
-**Kind**: static constant of [<code>MathHelper</code>](#module_MathHelper)  
+**Kind**: static constant of [<code>MathHelper</code>](#module_MathHelper)
 <a name="module_MathHelper.TWO_PI"></a>
 
 ### MathHelper.TWO_PI : <code>number</code>
 
-**Kind**: static constant of [<code>MathHelper</code>](#module_MathHelper)  
+**Kind**: static constant of [<code>MathHelper</code>](#module_MathHelper)
 <a name="module_MathHelper.getDistance"></a>
 
 ### MathHelper.getDistance(point1, point2) ⇒ <code>number</code>
 
 Get the distance between two points
 
-**Kind**: static method of [<code>MathHelper</code>](#module_MathHelper)  
+**Kind**: static method of [<code>MathHelper</code>](#module_MathHelper)
 **Returns**: <code>number</code> - Distance between point1 and point2
 
 | Param  | Type                | Description  |
@@ -305,7 +305,7 @@ Two point perspective grid on canvas.
 
 Note: Does not work correctly when there is only one vanishing point.
 
-**Kind**: Exported class  
+**Kind**: Exported class
 <a name="new_module_PerspectiveGrid--PerspectiveGrid_new"></a>
 
 #### new PerspectiveGrid(units, [squares])
@@ -350,7 +350,7 @@ Draw the grid in the instance context
 
 Update grid segments
 
-**Kind**: instance method of [<code>PerspectiveGrid</code>](#exp_module_PerspectiveGrid--PerspectiveGrid)  
+**Kind**: instance method of [<code>PerspectiveGrid</code>](#exp_module_PerspectiveGrid--PerspectiveGrid)
 <a name="module_PerspectiveGrid--PerspectiveGrid+getQuadAt"></a>
 
 #### perspectiveGrid.getQuadAt(column, row) ⇒ <code>Array.&lt;Point&gt;</code>
@@ -436,7 +436,7 @@ Get a line parallel to the horizon
 - [Point](#module_Point)
   - [Point](#exp_module_Point--Point) ⏏
     - [new Point(x, y)](#new_module_Point--Point_new)
-    - [.isInList(list)](#module_Point--Point+isInList) ⇒ <code>Boolean</code>
+    - [.isInList(list)](#module_Point--Point+isInList) ⇒ <code>boolean</code>
 
 <a name="exp_module_Point--Point"></a>
 
@@ -444,7 +444,7 @@ Get a line parallel to the horizon
 
 An object that defines a Point
 
-**Kind**: Exported class  
+**Kind**: Exported class
 <a name="new_module_Point--Point_new"></a>
 
 #### new Point(x, y)
@@ -456,7 +456,7 @@ An object that defines a Point
 
 <a name="module_Point--Point+isInList"></a>
 
-#### point.isInList(list) ⇒ <code>Boolean</code>
+#### point.isInList(list) ⇒ <code>boolean</code>
 
 Check if a point is in a list of points
 
@@ -481,7 +481,7 @@ Check if a point is in a list of points
 
 An object with two points that defines a segment
 
-**Kind**: Exported class  
+**Kind**: Exported class
 <a name="new_module_Segment--Segment_new"></a>
 
 #### new Segment(p1, p1)
