@@ -18,7 +18,7 @@ class Point {
   /**
    * Check if a point is in a list of points
    * @param  {Array.<Point>}  list Array of Points
-   * @return {Boolean}
+   * @returns {boolean}
    */
   isInList(list) {
     for (var i = 0, len = list.length; i < len; i++) {

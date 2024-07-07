@@ -21,7 +21,7 @@ export const TWO_PI = PI * 2;
  */
 export function getDistance(point1, point2) {
   return Math.sqrt(
-    Math.pow(point1.x - point2.x, 2) + Math.pow(point1.y - point2.y, 2)
+    Math.pow(point1.x - point2.x, 2) + Math.pow(point1.y - point2.y, 2),
   );
 }
 
@@ -31,7 +31,7 @@ export function getDistance(point1, point2) {
  * @param  {number} c1
  * @param  {number} m2
  * @param  {number} c2
- * @return {Point}
+ * @returns {Point}
  */
 export function getConvergencePoint(m1, c1, m2, c2) {
   if (Math.abs(m1 - m2) < EPSILON) {
@@ -50,7 +50,7 @@ export function getConvergencePoint(m1, c1, m2, c2) {
  * @param  {number} x
  * @param  {number} m
  * @param  {number} c
- * @return {number}
+ * @returns {number}
  */
 export function getVerticalConvergence(x, m, c) {
   return m * x + c;
@@ -62,7 +62,7 @@ export function getVerticalConvergence(x, m, c) {
  * @param  {number} y1
  * @param  {number} x2
  * @param  {number} y2
- * @return {{m:number, c: number}}
+ * @returns {{m:number, c: number}}
  */
 export function getLineParams(x1, y1, x2, y2) {
   const dx = x1 - x2;
@@ -84,7 +84,7 @@ export function getLineParams(x1, y1, x2, y2) {
  * Get parallel line parameters
  * @param  {number} line
  * @param  {Point} point
- * @return {{m:number, c: number}}
+ * @returns {{m:number, c: number}}
  */
 export function getParallelLine(line, point) {
   const c = point.y - line.m * point.x;
@@ -99,7 +99,7 @@ export function getParallelLine(line, point) {
  * Get the distance to a line parameters
  * @param  {{m:number, c: number}} line
  * @param  {Point} point
- * @return {number}
+ * @returns {number}
  */
 export function getDistanceToLine(line, point) {
   return getDistance(point, getProjectedPoint(line, point));
@@ -109,7 +109,7 @@ export function getDistanceToLine(line, point) {
  * Get a projected point
  * @param  {{m:number, c: number}} line
  * @param  {Point} point
- * @return {Point}
+ * @returns {Point}
  */
 export function getProjectedPoint(line, point) {
   const perpendicularm = -1 / line.m;
@@ -126,11 +126,11 @@ export function getProjectedPoint(line, point) {
  * @param  {Point} p2
  * @param  {Point} p3
  * @param  {Point} p4
- * @return {Point}
+ * @returns {Point}
  */
 export function getMassCenter(p1, p2, p3, p4) {
   return new Point(
     (p1.x + p2.x + p3.x + p4.x) / 4,
-    (p1.y + p2.y + p3.y + p4.y) / 4
+    (p1.y + p2.y + p3.y + p4.y) / 4,
   );
 }

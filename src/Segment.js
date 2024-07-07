@@ -21,16 +21,16 @@ class Segment {
   /**
    * Get intersection of two segments
    * @param  {Segment} segment
-   * @return {Point}
+   * @returns {Point}
    */
   intersect(segment) {
     const line1 = new LineEquation(
       getLineParams(this.p1.x, this.p1.y, this.p2.x, this.p2.y),
-      this.p1.x
+      this.p1.x,
     );
     const line2 = new LineEquation(
       getLineParams(segment.p1.x, segment.p1.y, segment.p2.x, segment.p2.y),
-      segment.p1.x
+      segment.p1.x,
     );
 
     return line1.intersect(line2);

@@ -48,14 +48,14 @@ class PerspectiveGrid {
     for (let y = this._tl.y; y <= this._bl.y + MathHelper.EPSILON; y += dy) {
       this.horizontal[this.horizontal.length] = new Segment(
         new Point(this._tl.x, y),
-        new Point(this._tr.x, y)
+        new Point(this._tr.x, y),
       );
     }
 
     for (let x = this._tl.x; x <= this._tr.x + MathHelper.EPSILON; x += dx) {
       this.vertical[this.vertical.length] = new Segment(
         new Point(x, this._tl.y),
-        new Point(x, this._bl.y)
+        new Point(x, this._bl.y),
       );
     }
   }
@@ -76,11 +76,11 @@ class PerspectiveGrid {
     // Get vanishing points and horizon
     const vVanishing = this._getVanishingEquation(
       MathHelper.getLineParams(this._tl.x, this._tl.y, this._bl.x, this._bl.y),
-      MathHelper.getLineParams(this._tr.x, this._tr.y, this._br.x, this._br.y)
+      MathHelper.getLineParams(this._tr.x, this._tr.y, this._br.x, this._br.y),
     );
     const hVanishing = this._getVanishingEquation(
       MathHelper.getLineParams(this._tl.x, this._tl.y, this._tr.x, this._tr.y),
-      MathHelper.getLineParams(this._bl.x, this._bl.y, this._br.x, this._br.y)
+      MathHelper.getLineParams(this._bl.x, this._bl.y, this._br.x, this._br.y),
     );
 
     let horizon = this._getHorizon(vVanishing, hVanishing);
@@ -90,25 +90,25 @@ class PerspectiveGrid {
       this._tl.x,
       this._tl.y,
       this._tr.x,
-      this._tr.y
+      this._tr.y,
     );
     let bottomLine = MathHelper.getLineParams(
       this._bl.x,
       this._bl.y,
       this._br.x,
-      this._br.y
+      this._br.y,
     );
     let leftLine = MathHelper.getLineParams(
       this._tl.x,
       this._tl.y,
       this._bl.x,
-      this._bl.y
+      this._bl.y,
     );
     let rightLine = MathHelper.getLineParams(
       this._tr.x,
       this._tr.y,
       this._br.x,
-      this._br.y
+      this._br.y,
     );
 
     // Recalculate horizon
@@ -132,14 +132,14 @@ class PerspectiveGrid {
         this._tl,
         this._bl,
         this._tr,
-        this._br
+        this._br,
       );
       vertical = this._getEquidistantLines(
         LineType.VERTICAL,
         this._tl,
         this._tr,
         this._bl,
-        this._br
+        this._br,
       );
     } else {
       horizontal = this._getLines(
@@ -147,14 +147,14 @@ class PerspectiveGrid {
         topLine,
         bottomLine,
         horizon,
-        hVanishing
+        hVanishing,
       );
       vertical = this._getLines(
         LineType.VERTICAL,
         leftLine,
         rightLine,
         horizon,
-        vVanishing
+        vVanishing,
       );
     }
 
@@ -166,7 +166,7 @@ class PerspectiveGrid {
    * Get the four vertices of a point in grid
    * @param  {number} column
    * @param  {number} row
-   * @return {Array<Point>}
+   * @returns {Array<Point>}
    */
   getQuadAt(column, row) {
     const p1 = this.horizontal[row - 1].intersect(this.vertical[column - 1]);
@@ -188,12 +188,12 @@ class PerspectiveGrid {
    * Get the center point from grid unit to pixel eg. (1, 1) is the first top left point
    * @param  {number} column
    * @param  {number} row
-   * @return {Point}
+   * @returns {Point}
    */
   getCenterAt(column, row) {
     const center = MathHelper.getMassCenter.apply(
       null,
-      this.getQuadAt(column, row)
+      this.getQuadAt(column, row),
     );
 
     if (this.debug) {
@@ -234,7 +234,7 @@ class PerspectiveGrid {
       }
 
       const p1 = this.horizontal[point.y - 1].intersect(
-        this.vertical[point.x - 1]
+        this.vertical[point.x - 1],
       );
       const p2 = this.horizontal[point.y - 1].intersect(this.vertical[point.x]);
       const p3 = this.horizontal[point.y].intersect(this.vertical[point.x - 1]);
@@ -265,7 +265,7 @@ class PerspectiveGrid {
       radius,
       0,
       MathHelper.TWO_PI,
-      false
+      false,
     );
     context.fillStyle = color || "grey";
     context.fill();
@@ -312,20 +312,20 @@ class PerspectiveGrid {
         MathHelper.getVerticalConvergence(
           this._tl.x,
           oppositeSide.m,
-          oppositeSide.c
-        )
+          oppositeSide.c,
+        ),
       );
     } else if (oppositeSide === null) {
       vanishing = new Point(
         this._tr.x,
-        MathHelper.getVerticalConvergence(this._tr.x, side.m, side.c)
+        MathHelper.getVerticalConvergence(this._tr.x, side.m, side.c),
       );
     } else {
       vanishing = MathHelper.getConvergencePoint(
         side.m,
         side.c,
         oppositeSide.m,
-        oppositeSide.c
+        oppositeSide.c,
       );
     }
 
@@ -341,7 +341,7 @@ class PerspectiveGrid {
     sideStart,
     sideEnd,
     matchingStart,
-    matchingEnd
+    matchingEnd,
   ) {
     let lines = [];
 
@@ -349,27 +349,27 @@ class PerspectiveGrid {
 
     const delta = new Point(
       (sideEnd.x - sideStart.x) / units,
-      (sideEnd.y - sideStart.y) / units
+      (sideEnd.y - sideStart.y) / units,
     );
     const matchingDelta = new Point(
       (matchingEnd.x - matchingStart.x) / units,
-      (matchingEnd.y - matchingStart.y) / units
+      (matchingEnd.y - matchingStart.y) / units,
     );
 
     for (let i = 0; i <= units; i++) {
       const begin = new Point(
         sideStart.x + i * delta.x,
-        sideStart.y + i * delta.y
+        sideStart.y + i * delta.y,
       );
       const end = new Point(
         matchingStart.x + i * matchingDelta.x,
-        matchingStart.y + i * matchingDelta.y
+        matchingStart.y + i * matchingDelta.y,
       );
       const lineParams = MathHelper.getLineParams(
         begin.x,
         begin.y,
         end.x,
-        end.y
+        end.y,
       );
       const line = new LineEquation(lineParams, begin.x);
       lines.push(line);
@@ -385,7 +385,7 @@ class PerspectiveGrid {
    * @param  {LineEquation} oppositeSide
    * @param  {LineEquation} horizon
    * @param  {Point} vanishingPoint
-   * @return {Array<LineEquation>}
+   * @returns {Array<LineEquation>}
    */
   _getLines(lineType, side, oppositeSide, horizon, vanishingPoint) {
     // Project sides onto the horizon
@@ -398,7 +398,7 @@ class PerspectiveGrid {
 
     const distance = new Point(
       projectedOppositeSide.x - projectedSide.x,
-      projectedOppositeSide.y - projectedSide.y
+      projectedOppositeSide.y - projectedSide.y,
     );
 
     const units = lineType === LineType.HORIZONTAL ? this.rows : this.columns;
@@ -411,13 +411,13 @@ class PerspectiveGrid {
     for (let i = 0; i <= units; i++) {
       const startPoint = new Point(
         projectedSide.x + i * dx,
-        projectedSide.y + i * dy
+        projectedSide.y + i * dy,
       );
       const line = MathHelper.getLineParams(
         startPoint.x,
         startPoint.y,
         vanishingPoint.x,
-        vanishingPoint.y
+        vanishingPoint.y,
       );
       results.push(new LineEquation(line, startPoint.x));
     }
@@ -428,7 +428,7 @@ class PerspectiveGrid {
    * Get a line parallel to the horizon
    * @param  {Point} vVanishing
    * @param  {Point} hVanishing
-   * @return {{m:number, c: number}}
+   * @returns {{m:number, c: number}}
    */
   _getHorizon(vVanishing, hVanishing) {
     // No horizon (eg. flat grid)
@@ -444,7 +444,7 @@ class PerspectiveGrid {
       vVanishing.x,
       vVanishing.y,
       hVanishing.x,
-      hVanishing.y
+      hVanishing.y,
     );
 
     let furthestFromHorizon = this._tl;

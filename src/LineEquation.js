@@ -26,7 +26,7 @@ class LineEquation {
   /**
    * Get intersection of two line equation
    * @param  {LineEquation} equation
-   * @return {Point}
+   * @returns {Point}
    */
   intersect(equation) {
     if (this.vertical && equation.vertical) {
@@ -36,14 +36,14 @@ class LineEquation {
     if (this.vertical) {
       return new Point(
         this.x,
-        getVerticalConvergence(this.x, equation.m, equation.c)
+        getVerticalConvergence(this.x, equation.m, equation.c),
       );
     }
 
     if (equation.vertical) {
       return new Point(
         equation.x,
-        getVerticalConvergence(equation.x, this.m, this.c)
+        getVerticalConvergence(equation.x, this.m, this.c),
       );
     }
 
